@@ -34,10 +34,5 @@
     (conj rects (assoc p :x x :y y))))
 
 (defn layout [grid-width photos]
-  "photo is a map
-    width :: Int
-    height :: Int 
-    id :: Int
-  "
-  reduce (fn [rects p] (layout-iteration grid-width rects p)) [] photos)
+  (reduce (fn [rects p] (layout-iteration grid-width rects p)) [] photos))
 

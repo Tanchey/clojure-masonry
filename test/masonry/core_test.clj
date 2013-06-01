@@ -73,5 +73,8 @@
 
 (deftest layout-test
   (testing "d"
+    (is (= [] (layout 2 [])))
+    (is (= [{:x 0 :y 0 :width 1 :height 1}]
+           (layout 2 [{:width 1 :height 1}])))
     (is (= rects-for-some-photos
            (layout 2 some-photos)))))
