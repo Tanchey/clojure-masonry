@@ -8,6 +8,12 @@
   , {:x 3 :y 7 :width 1 :height 5}
   ])
 
+(def layouted-some-rects
+  [ {:x 0 :y 3 :width 2 :height 4}
+  , {:x 2 :y 5 :width 1 :height 1}
+  , {:x 3 :y 7 :width 1 :height 5}
+  ])
+
 (def some-photos
   [ {:id 1 :width 1 :height 1}
   , {:id 2 :width 2 :height 1}
@@ -21,7 +27,7 @@
 
 (deftest a-test
   (testing "FIXME, I fail."
-    (is (= (count some-photos) (count (layout 200 some-photos))))))
+    (is (= (count some-photos) (count (layout 2 some-photos))))))
 
 (deftest contains-column-test
   (testing "d"
@@ -44,13 +50,20 @@
 
 (deftest lower-edge-shape-test
   (testing "d"
-    (is (= '(0 7 7 12) (lower-edge-shape 4 some-rects)))))
+    (is (= '(0 7 7 12) (lower-edge-shape 4 some-rects)))
+    (is (= '(7 7 6 12) (lower-edge-shape 4 layouted-some-rects)))))
 
 (deftest free-y-at-column-for-width-test
   (testing "d"
     (is (and
           (= (free-y-at-column-for-width 0 2 [0 7 7]) 7)
           (= (free-y-at-column-for-width 0 1 [0 7 7]) 0)))))
+
+(deftest eliminate-gap-test
+  (testing "d"
+    (is (= (eliminate-gap 2 [1 0] [{:x 0 :y 0 :width 1 :height 1}]
+                          {:x 0 :y 1 :width 2 :height 1})
+           [{:x 0 :y 0 :width 1 :height 1} {:x 0 :y 1 :width 2 :height 1}]))))
 
 (deftest find-first-gap-test
   (testing "d"
@@ -73,10 +86,10 @@
            (layout-iteration 4 [{:x 0 :y 0 :width 2 :height 42}] {:width 2 :height 42}))
     (is (= [{:x 0 :y 0 :width 2 :height 42}, {:x 0 :y 42 :width 2 :height 42}])
            (layout-iteration 2 [{:x 0 :y 0 :width 2 :height 42}] {:width 2 :height 42}))
-    (is (= (conj some-rects {:x 0 :y 7 :width 2 :height 42})
-           (layout-iteration 4 some-rects {:width 2 :height 42})))
-    (is (= (conj some-rects {:x 0 :y 0 :width 1 :height 42})
-           (layout-iteration 4 some-rects {:width 1 :height 42})))))
+    (is (= (conj layouted-some-rects {:x 0 :y 7 :width 2 :height 42})
+           (layout-iteration 4 layouted-some-rects {:width 2 :height 42})))
+    (is (= (conj layouted-some-rects {:x 2 :y 6 :width 1 :height 42})
+           (layout-iteration 4 layouted-some-rects {:width 1 :height 42})))))
 
 (deftest layout-test
   (testing "d"
@@ -85,3 +98,25 @@
            (layout 2 [{:width 1 :height 1}])))
     (is (= rects-for-some-photos
            (layout 2 some-photos)))))
+
+(deftest find-neighbors-test
+  (testing "d"
+    (is (= {:foo 1} (find-rect (fn [x] true) [{:foo 1}])))
+    (is (= nil (find-left-neighbor [1 0] [])))
+    (is (= {:x 0 :y 0 :width 1 :height 1}
+             (find-left-neighbor [1 0] [{:x 0 :y 0 :width 1 :height 1}])))
+    (is (= {:x 1 :y 0 :width 1 :height 1}
+             (find-top-neighbor [1 1]
+                [{:x 1 :y 0 :width 1 :height 1}, {:x 0 :y 1 :width 2 :height 1}])))))
+
+(deftest stretch-test
+  (testing "d"
+    (is (= [{:x 0 :y 0 :width 2 :height 1}]
+           (x-stretch {:x 0 :y 0 :width 1 :height 1}
+                     [{:x 0 :y 0 :width 1 :height 1}])))
+    (is (= [{:x 0 :y 0 :width 2 :height 1} {:x 1 :y 1 :width 2 :height 2}]
+           (x-stretch {:x 0 :y 0 :width 1 :height 1}
+             [{:x 0 :y 0 :width 1 :height 1} {:x 1 :y 1 :width 2 :height 2}])))
+    (is (= [{:x 1 :y 0 :width 2 :height 2} {:x 0 :y 0 :width 1 :height 3}]
+           (y-stretch {:x 1 :y 0 :width 2 :height 1}
+              [{:x 1 :y 0 :width 2 :height 1} {:x 0 :y 0 :width 1 :height 3}])))))

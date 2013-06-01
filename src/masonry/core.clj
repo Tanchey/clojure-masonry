@@ -38,13 +38,46 @@
       [gapx gapy]
       nil)))
 
-(defn eliminate-gaps [grid-width rects]
-  rects)
+(defn y-stretch [{:keys [height] :as rect} rects]
+  (map #(if (= % rect) (assoc rect :height (inc height)) %) rects))
+
+(defn x-stretch [{:keys [width] :as rect} rects]
+  (map #(if (= % rect) (assoc rect :width (inc width)) %) rects))
+
+(declare layout-iteration)
+
+(defn find-rect [pred rects]
+  (first (filter pred rects)))
+
+(defn find-top-neighbor [[x y] rects]
+  (find-rect #(and (= (:x %) x) (= (+ (:y %) (:height %)) y)) rects))
+
+(defn find-left-neighbor [[x y] rects]
+  (find-rect #(and (= (:y %) y) (= (+ (:x %) (:width %)) x)) rects))
+
+(defn eliminate-gap [grid-width gap rects newrect]
+  (let [ left-neighbor (find-left-neighbor gap rects)
+         top-neighbor (find-top-neighbor gap rects)]
+  (cond (not (nil? top-neighbor))
+          (conj (y-stretch top-neighbor rects) newrect)
+        (not (nil? left-neighbor))
+          (layout-iteration
+            grid-width (x-stretch left-neighbor rects) newrect))
+        :else (throw (Exception. 
+               (str "No neighbors for gap " gap " rects " rects)))))
+
+(defn refine [grid-width rects newrect shape]
+  (let [gap (find-first-gap newrect shape)]
+    (if (nil? gap)
+      (conj rects newrect)
+      (eliminate-gap grid-width gap rects newrect))))
 
 (defn layout-iteration [grid-width rects p]
-    (let [[x y] (reduce rect-less
-                  (free-points (:width p) (lower-edge-shape grid-width rects)))]
-    (eliminate-gaps grid-width (conj rects (assoc p :x x :y y)))))
+    (let [shape (lower-edge-shape grid-width rects)
+          [x y] (reduce rect-less
+                  (free-points (:width p) shape))
+          newrect (assoc p :x x :y y)]
+    (refine grid-width rects newrect shape)))
 
 (defn layout [grid-width photos]
   (reduce (fn [rects p] (layout-iteration grid-width rects p)) [] photos))
