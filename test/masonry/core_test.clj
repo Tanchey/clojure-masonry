@@ -52,6 +52,13 @@
           (= (free-y-at-column-for-width 0 2 [0 7 7]) 7)
           (= (free-y-at-column-for-width 0 1 [0 7 7]) 0)))))
 
+(deftest find-first-gap-test
+  (testing "d"
+    (is (= [2 0] (find-first-gap {:x 1 :y 1 :width 2 :height 1} [1 1 0 1])))
+    (is (= [0 0] (find-first-gap {:x 0 :y 1 :width 3 :height 1} [0 1 0 1])))
+    (is (= [0 0] (find-first-gap {:x 0 :y 1 :width 2 :height 1} [0 1 1 1])))
+    (is (= nil (find-first-gap {:x 1 :y 1 :width 2 :height 1} [1 1 1 1])))))
+
 (deftest free-points-test
   (testing "d"
     (is (= [[0 7] [1 7] [2 12]] (free-points 2 [0 7 7 12])))
