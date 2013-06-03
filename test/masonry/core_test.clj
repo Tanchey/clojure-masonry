@@ -21,7 +21,7 @@
   ])
 
 (def rects-for-some-photos
-  [ {:id 1 :x 0 :y 0 :width 1 :height 1}
+  [ {:id 1 :x 0 :y 0 :width 2 :height 1}
   , {:id 2 :x 0 :y 1 :width 2 :height 1}
   , {:id 3 :x 0 :y 2 :width 1 :height 5}])
 
@@ -61,22 +61,25 @@
 
 (deftest eliminate-gap-test
   (testing "d"
-    (is (= (eliminate-gap 2 [1 0] [{:x 0 :y 0 :width 1 :height 1}]
-                          {:x 0 :y 1 :width 2 :height 1})
-           [{:x 0 :y 0 :width 1 :height 1} {:x 0 :y 1 :width 2 :height 1}]))))
+    (is (= (set (eliminate-gap 2 {:x 1 :y 1} [{:x 0 :y 0 :width 1 :height 2} {:x 1 :y 0 :width 1 :height 1}]
+                          {:x 0 :y 2 :width 2 :height 1}))
+           #{{:x 0 :y 0 :width 1 :height 2} {:x 1 :y 0 :width 1 :height 2} {:x 0 :y 2 :width 2 :height 1}}))
+    (is (= (set (eliminate-gap 2 {:x 1 :y 0} [{:x 0 :y 0 :width 1 :height 1}]
+                          {:x 0 :y 1 :width 2 :height 1}))
+           #{{:x 0 :y 0 :width 2 :height 1} {:x 0 :y 1 :width 2 :height 1}}))))
 
 (deftest find-first-gap-test
   (testing "d"
-    (is (= [2 0] (find-first-gap {:x 1 :y 1 :width 2 :height 1} [1 1 0 1])))
-    (is (= [0 0] (find-first-gap {:x 0 :y 1 :width 3 :height 1} [0 1 0 1])))
-    (is (= [0 0] (find-first-gap {:x 0 :y 1 :width 2 :height 1} [0 1 1 1])))
+    (is (= {:x 2 :y 0} (find-first-gap {:x 1 :y 1 :width 2 :height 1} [1 1 0 1])))
+    (is (= {:x 0 :y 0} (find-first-gap {:x 0 :y 1 :width 3 :height 1} [0 1 0 1])))
+    (is (= {:x 0 :y 0} (find-first-gap {:x 0 :y 1 :width 2 :height 1} [0 1 1 1])))
     (is (= nil (find-first-gap {:x 1 :y 1 :width 2 :height 1} [1 1 1 1])))))
 
 (deftest free-points-test
   (testing "d"
-    (is (= [[0 7] [1 7] [2 12]] (free-points 2 [0 7 7 12])))
-    (is (= [[0 1] [1 1] [2 1] [3 1]] (free-points 2 [0 1 0 1 0])))
-    (is (= [[0 0] [1 7] [2 7] [3 12]] (free-points 1 [0 7 7 12])))))
+    (is (= [{:x 0 :y 7} {:x 1 :y 7} {:x 2 :y 12}] (free-points 2 [0 7 7 12])))
+    (is (= [{:x 0 :y 1} {:x 1 :y 1} {:x 2 :y 1} {:x 3 :y 1}] (free-points 2 [0 1 0 1 0])))
+    (is (= [{:x 0 :y 0} {:x 1 :y 7} {:x 2 :y 7} {:x 3 :y 12}] (free-points 1 [0 7 7 12])))))
 
 (deftest layout-iteration-test
   (testing "d"
@@ -96,18 +99,21 @@
     (is (= [] (layout 2 [])))
     (is (= [{:x 0 :y 0 :width 1 :height 1}]
            (layout 2 [{:width 1 :height 1}])))
-    (is (= rects-for-some-photos
-           (layout 2 some-photos)))))
+    (is (= (set rects-for-some-photos)
+           (set (layout 2 some-photos))))))
 
 (deftest find-neighbors-test
   (testing "d"
     (is (= {:foo 1} (find-rect (fn [x] true) [{:foo 1}])))
-    (is (= nil (find-left-neighbor [1 0] [])))
+    (is (= nil (find-left-neighbor {:x 1 :y 0} [])))
     (is (= {:x 0 :y 0 :width 1 :height 1}
-             (find-left-neighbor [1 0] [{:x 0 :y 0 :width 1 :height 1}])))
+             (find-left-neighbor {:x 1 :y 0} [{:x 0 :y 0 :width 1 :height 1}])))
     (is (= {:x 1 :y 0 :width 1 :height 1}
-             (find-top-neighbor [1 1]
-                [{:x 1 :y 0 :width 1 :height 1}, {:x 0 :y 1 :width 2 :height 1}])))))
+             (find-top-neighbor {:x 1 :y 1}
+                [{:x 1 :y 0 :width 1 :height 1}, {:x 0 :y 1 :width 2 :height 1}])))
+    (is (nil? (find-left-neighbor {:x 1 :y 1} [{:x 0 :y 0 :width 1 :height 2} {:x 1 :y 0 :width 1 :height 1}])))
+    (is (= {:x 1 :y 0 :width 1 :height 1}
+             (find-top-neighbor {:x 1 :y 1} [{:x 0 :y 0 :width 1 :height 2} {:x 1 :y 0 :width 1 :height 1}])))))
 
 (deftest stretch-test
   (testing "d"
@@ -119,4 +125,7 @@
              [{:x 0 :y 0 :width 1 :height 1} {:x 1 :y 1 :width 2 :height 2}])))
     (is (= [{:x 1 :y 0 :width 2 :height 2} {:x 0 :y 0 :width 1 :height 3}]
            (y-stretch {:x 1 :y 0 :width 2 :height 1}
-              [{:x 1 :y 0 :width 2 :height 1} {:x 0 :y 0 :width 1 :height 3}])))))
+              [{:x 1 :y 0 :width 2 :height 1} {:x 0 :y 0 :width 1 :height 3}])))
+    (is (= [{:x 0 :y 0 :width 1 :height 2} {:x 1 :y 0 :width 1 :height 2}]
+            (y-stretch {:x 1 :y 0 :width 1 :height 1}
+                       [{:x 0 :y 0 :width 1 :height 2} {:x 1 :y 0 :width 1 :height 1}])))))
