@@ -61,18 +61,19 @@
 
 (deftest eliminate-gap-test
   (testing "d"
-    (is (= (set (eliminate-gap 2 {:x 1 :y 1} [{:x 0 :y 0 :width 1 :height 2} {:x 1 :y 0 :width 1 :height 1}]
+    (is (= (set (eliminate-gap 2 {:x 1 :y 1 :height 1} [{:x 0 :y 0 :width 1 :height 2} {:x 1 :y 0 :width 1 :height 1}]
                           {:x 0 :y 2 :width 2 :height 1}))
            #{{:x 0 :y 0 :width 1 :height 2} {:x 1 :y 0 :width 1 :height 2} {:x 0 :y 2 :width 2 :height 1}}))
-    (is (= (set (eliminate-gap 2 {:x 1 :y 0} [{:x 0 :y 0 :width 1 :height 1}]
+    (is (= (set (eliminate-gap 2 {:x 1 :y 0 :height 1} [{:x 0 :y 0 :width 1 :height 1}]
                           {:x 0 :y 1 :width 2 :height 1}))
            #{{:x 0 :y 0 :width 2 :height 1} {:x 0 :y 1 :width 2 :height 1}}))))
 
 (deftest find-first-gap-test
   (testing "d"
-    (is (= {:x 2 :y 0} (find-first-gap {:x 1 :y 1 :width 2 :height 1} [1 1 0 1])))
-    (is (= {:x 0 :y 0} (find-first-gap {:x 0 :y 1 :width 3 :height 1} [0 1 0 1])))
-    (is (= {:x 0 :y 0} (find-first-gap {:x 0 :y 1 :width 2 :height 1} [0 1 1 1])))
+    (is (= {:x 2 :y 0 :height 1} (find-first-gap {:x 1 :y 1 :width 2 :height 1} [1 1 0 1])))
+    (is (= {:x 0 :y 0 :height 1} (find-first-gap {:x 0 :y 1 :width 3 :height 1} [0 1 0 1])))
+    (is (= {:x 0 :y 0 :height 1} (find-first-gap {:x 0 :y 1 :width 2 :height 1} [0 1 1 1])))
+    (is (= {:x 0 :y 0 :height 2} (find-first-gap {:x 0 :y 2 :width 4 :height 1} [0 2 1 1])))
     (is (= nil (find-first-gap {:x 1 :y 1 :width 2 :height 1} [1 1 1 1])))))
 
 (deftest free-points-test
@@ -124,8 +125,8 @@
            (x-stretch {:x 0 :y 0 :width 1 :height 1}
              [{:x 0 :y 0 :width 1 :height 1} {:x 1 :y 1 :width 2 :height 2}])))
     (is (= [{:x 1 :y 0 :width 2 :height 2} {:x 0 :y 0 :width 1 :height 3}]
-           (y-stretch {:x 1 :y 0 :width 2 :height 1}
+           (y-stretch {:x 1 :y 0 :width 2 :height 1} 1
               [{:x 1 :y 0 :width 2 :height 1} {:x 0 :y 0 :width 1 :height 3}])))
     (is (= [{:x 0 :y 0 :width 1 :height 2} {:x 1 :y 0 :width 1 :height 2}]
-            (y-stretch {:x 1 :y 0 :width 1 :height 1}
+            (y-stretch {:x 1 :y 0 :width 1 :height 1} 1
                        [{:x 0 :y 0 :width 1 :height 2} {:x 1 :y 0 :width 1 :height 1}])))))

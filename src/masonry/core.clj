@@ -37,11 +37,11 @@
                         (drop (:x rect)
                           (free-points 1 shape))))]
     (if (< (:y gap) (:y rect))
-      gap
+      (assoc gap :height (- (:y rect) (:y gap)))
       nil)))
 
-(defn y-stretch [{:keys [height] :as rect} rects]
-  (map #(if (= % rect) (assoc rect :height (inc height)) %) rects))
+(defn y-stretch [{:keys [height] :as rect} delta-height rects]
+  (map #(if (= % rect) (assoc rect :height (+ height delta-height)) %) rects))
 
 (defn x-stretch [{:keys [width] :as rect} rects]
   (map #(if (= % rect) (assoc rect :width (inc width)) %) rects))
@@ -61,7 +61,7 @@
   (let [top-neighbor (find-top-neighbor gap rects)
         left-neighbor (find-left-neighbor gap rects)]
     (cond (not (nil? top-neighbor))
-            (conj (y-stretch top-neighbor rects) newrect)
+            (conj (y-stretch top-neighbor (:height gap) rects) newrect)
           (not (nil? left-neighbor))
             (layout-iteration
               grid-width (x-stretch left-neighbor rects) newrect)
